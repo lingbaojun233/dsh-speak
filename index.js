@@ -49,7 +49,14 @@ const textBlock = (value) => [
   { type: 'text', text: typeof value === 'string' ? value : JSON.stringify(value) },
 ];
 
-async function synthesize(baseUrl, text, voice) {
+// Node 20+ 才有 AbortSignal.any；更老的运行时退化为只有本地超时，
+// 这样插件仍然只依赖 Node 内置能力（engines 仍是 >=18）。
+function withOuterSignal(local, outer) {
+  if (!outer) return local;
+  return typeof AbortSignal.any === 'function' ? AbortSignal.any([local, outer]) : local;
+}
+
+async function synthesize(baseUrl, text, voice, outerSignal) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SPEAK_TIMEOUT_MS);
   try {
@@ -57,7 +64,7 @@ async function synthesize(baseUrl, text, voice) {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(voice ? { text, voice } : { text }),
-      signal: controller.signal,
+      signal: withOuterSignal(controller.signal, outerSignal),
     });
 
     const contentType = (res.headers.get('content-type') || '').toLowerCase();
@@ -93,6 +100,10 @@ async function synthesize(baseUrl, text, voice) {
     return { ok: true, buffer, headerVoice: res.headers.get('x-speak-voice') || null };
   } catch (err) {
     const aborted = err && err.name === 'AbortError';
+    // 宿主取消不是后端不可达：别让模型去重启一个其实健康的服务。
+    if (outerSignal && outerSignal.aborted) {
+      return { ok: false, code: 'ABORTED', message: 'the caller cancelled this tool call' };
+    }
     return {
       ok: false,
       code: aborted ? 'TIMEOUT' : 'UNREACHABLE',
@@ -107,7 +118,7 @@ async function synthesize(baseUrl, text, voice) {
 }
 
 // 把路径交给宿主，界面才能自动播放。没有 DSH_ACTION_URL 就安静跳过。
-async function notifyAction(filePath, text) {
+async function notifyAction(filePath, text, outerSignal) {
   const url = (process.env.DSH_ACTION_URL || '').trim();
   if (!url) return false;
   // sessionId 必须带：宿主按它把动作归到"这一轮"，不带就落到默认队列，
@@ -125,7 +136,7 @@ async function notifyAction(filePath, text) {
         // 契约形状：{type, payload}。扁平字段保留一份，兼容只读扁平的宿主。
         payload: { path: filePath, text },
       }),
-      signal: AbortSignal.timeout(ACTION_TIMEOUT_MS),
+      signal: withOuterSignal(AbortSignal.timeout(ACTION_TIMEOUT_MS), outerSignal),
     });
     return res.ok;
   } catch {
@@ -162,7 +173,11 @@ export function apply(ctx, config) {
       schema: { type: 'object' },
       render: (_args, value) => textBlock(value),
     },
-    async execute(args) {
+    // 宿主协作超时：比本地 90s 多给 5s，让本地先返回具体的 TIMEOUT 明细。
+    timeoutMs: SPEAK_TIMEOUT_MS + 5000,
+    // 每次输出都是 uuid 文件名，多个 say 并发不会互相覆盖。
+    isConcurrencySafe: () => true,
+    async execute(args, exec) {
       const text = String(args.text || '').trim();
       if (!text) {
         return { ok: false, code: 'EMPTY_TEXT', message: 'text is required and must not be blank' };
@@ -170,7 +185,8 @@ export function apply(ctx, config) {
 
       const started = Date.now();
       const voice = normalizeVoice(args.voice);
-      const result = await synthesize(baseUrl, text, voice);
+      const signal = exec && exec.signal;
+      const result = await synthesize(baseUrl, text, voice, signal);
       if (!result.ok) return result;
 
       await mkdir(outDir, { recursive: true });
@@ -178,7 +194,7 @@ export function apply(ctx, config) {
       const filePath = path.join(outDir, `${randomUUID()}.wav`);
       await writeFile(filePath, result.buffer);
 
-      await notifyAction(filePath, text);
+      await notifyAction(filePath, text, signal);
 
       return {
         ok: true,
