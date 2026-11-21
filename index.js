@@ -157,7 +157,7 @@ export function apply(ctx, config) {
   register({
     name: 'say',
     description:
-      'Synthesize text to a local WAV file and return its path. Voices: yaoyao / huayan / huihui / kangkang; other values fall back to the server default.',
+      'Synthesize text to a local WAV file and return its path. Leave oice EMPTY unless the user explicitly asks for a different voice: the server then uses the persona voice (BreezeBlue cloud), which is the intended default. Only pass a value when the user names one.',
     parameters: {
       type: 'object',
       required: ['text'],
@@ -165,7 +165,7 @@ export function apply(ctx, config) {
         text: { type: 'string', description: 'Keep it to one or two sentences.' },
         voice: {
           type: 'string',
-          description: 'Optional id, e.g. yaoyao / huayan / huihui / kangkang',
+          description: 'Leave empty (recommended) = persona voice from the cloud. Do not guess. Only set when the user names a specific voice; legacy local ids yaoyao / huayan / huihui / kangkang still work but bypass the persona voice.',
         },
       },
     },
