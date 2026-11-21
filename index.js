@@ -146,16 +146,15 @@ export function apply(ctx, config) {
   register({
     name: 'say',
     description:
-      'Synthesize speech from text and return the local path of a WAV file. voice: yaoyao / huayan / huihui / kangkang (server falls back to its default for unsupported values). Fails with a structured code when the TTS service is unreachable.',
+      'Synthesize text to a local WAV file and return its path. Voices: yaoyao / huayan / huihui / kangkang; other values fall back to the server default.',
     parameters: {
       type: 'object',
-      additionalProperties: false,
       required: ['text'],
       properties: {
-        text: { type: 'string', description: 'Text to speak. Keep it short: one or two sentences.' },
+        text: { type: 'string', description: 'Keep it to one or two sentences.' },
         voice: {
           type: 'string',
-          description: 'Optional voice id, e.g. yaoyao / huayan / huihui / kangkang',
+          description: 'Optional id, e.g. yaoyao / huayan / huihui / kangkang',
         },
       },
     },
