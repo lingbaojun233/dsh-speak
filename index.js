@@ -110,11 +110,19 @@ async function synthesize(baseUrl, text, voice) {
 async function notifyAction(filePath, text) {
   const url = (process.env.DSH_ACTION_URL || '').trim();
   if (!url) return false;
+  // sessionId 必须带：宿主按它把动作归到"这一轮"，不带就落到默认队列，
+  // 界面永远收不到（踩过：动作成功入队却回不到这一轮）。
+  const sessionId = (process.env.DSH_SESSION_ID || '').trim();
   try {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ type: 'speak', path: filePath, text }),
+      body: JSON.stringify({
+        type: 'speak',
+        sessionId: sessionId || undefined,
+        path: filePath,
+        text,
+      }),
       signal: AbortSignal.timeout(ACTION_TIMEOUT_MS),
     });
     return res.ok;
