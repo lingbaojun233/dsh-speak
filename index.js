@@ -122,6 +122,8 @@ async function notifyAction(filePath, text) {
         sessionId: sessionId || undefined,
         path: filePath,
         text,
+        // 契约形状：{type, payload}。扁平字段保留一份，兼容只读扁平的宿主。
+        payload: { path: filePath, text },
       }),
       signal: AbortSignal.timeout(ACTION_TIMEOUT_MS),
     });
