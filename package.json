@@ -34,5 +34,9 @@
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
+  },
+  "homepage": "https://github.com/lingbaojun233/dsh-speak#readme",
+  "bugs": {
+    "url": "https://github.com/lingbaojun233/dsh-speak/issues"
   }
 }
