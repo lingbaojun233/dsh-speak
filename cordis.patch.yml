@@ -1,0 +1,6 @@
+- insert:
+    - id: dsh-speak
+      name: 'dsh-speak'
+      config:
+        baseUrl: 'http://127.0.0.1:8770'
+        outDir: ''

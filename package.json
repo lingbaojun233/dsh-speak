@@ -1,0 +1,38 @@
+{
+  "name": "dsh-speak",
+  "version": "1.0.0",
+  "description": "Native DSH tool for text-to-speech: synthesize WAV files through a speak service.",
+  "type": "module",
+  "license": "MIT",
+  "author": "lingbaojun233",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lingbaojun233/dsh-speak.git"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "tts",
+    "speech",
+    "wav"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "locale",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

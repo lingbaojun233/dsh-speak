@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "语音合成",
+    "description": "把 say 注册为 DSH 原生工具：文本交给 speak 服务合成 WAV 并落盘，可选通知宿主界面自动播放。"
+  }
+}

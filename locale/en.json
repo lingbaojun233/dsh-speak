@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Speech synthesis",
+    "description": "Exposes say as a native DSH tool: text is synthesized to a WAV file by a speak service, with an optional host action so the UI can play it."
+  }
+}

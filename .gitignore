@@ -1,0 +1,17 @@
+# 依赖与产物
+node_modules/
+*.tgz
+
+# 运行时
+*.log
+.env
+.env.*
+
+# 合成出来的音频（默认写到系统临时目录，这里只防有人把 outDir 指到仓库里）
+out/
+
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
